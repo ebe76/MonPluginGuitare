@@ -19,21 +19,22 @@ jobs:
         with:
           repository: juce-framework/JUCE
           ref: '7.0.5'
-          path: JUCE # Telecharge JUCE directement dans un dossier nomme JUCE
+          path: JUCE
 
       - name: Configurer CMake natif
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.25.x'
 
+      # CORRECTION : On compile dans "build_propre" pour écraser le bug de l'archive
       - name: Configurer le projet
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build_propre -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 
       - name: Compiler le Plugin
-        run: cmake --build build --config Release --target NoteDetector_VST3
+        run: cmake --build build_propre --config Release --target NoteDetector_VST3
 
       - name: Sauvegarder le fichier VST3
         uses: actions/upload-artifact@v4
         with:
           name: MonPluginGuitare-VST3
-          path: build/NoteDetector_artefacts/Release/VST3/NoteDetector.vst3
+          path: build_propre/NoteDetector_artefacts/Release/VST3/NoteDetector.vst3
