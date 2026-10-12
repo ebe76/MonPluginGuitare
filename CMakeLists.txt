@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
-project(NoteDetector AUDIO_PLUGIN)
 
-# --- CONFIGURATION DU TÉLÉCHARGEMENT AUTOMATIQUE DE JUCE ---
+# CORRECTION : On indique explicitement à CMake que le projet utilise le langage C++ (CXX)
+project(NoteDetector VERSION 1.0.0 LANGUAGES CXX)
+
+# Configuration du téléchargement automatique de JUCE
 include(FetchContent)
 FetchContent_Declare(
     juce
@@ -10,8 +12,8 @@ FetchContent_Declare(
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(juce)
-# -----------------------------------------------------------
 
+# Maintenant on peut créer le plugin audio en toute sécurité
 juce_add_plugin(NoteDetector
     COMPANY_NAME "MonPlugin"
     PLUGIN_NAME "NoteDetector"
