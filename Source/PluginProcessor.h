@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_dsp/juce_dsp.h> // NOUVEAU : Module DSP pour la FFT
 #include <vector>
 
 class NoteDetectorAudioProcessor  : public juce::AudioProcessor
@@ -34,17 +35,23 @@ public:
     void changeTuning (int tuningId);
     std::vector<int> getCurrentTuningNotes();
 
-    // Variables partagées avec l'interface graphique
+    // Variables partagées avec le visuel
     std::atomic<float> currentFrequency { 0.0f };
     juce::String currentChordName { "Aucun accord" };
+    std::vector<int> notesActivesDansLAccord; // Liste des notes détectées simultanément
 
 private:
     std::vector<int> notesCordesAide { 40, 45, 50, 55, 59, 64 };
     juce::CriticalSection lock;
 
-    // --- CORRECTION : Déclaration essentielle de la mémoire tampon pour les cordes graves ---
-    static const int bufferHistoriqueTaille = 2048;
-    std::vector<float> bufferHistorique { std::vector<float>(bufferHistoriqueTaille, 0.0f) };
+    // --- NOUVEAU : Objets FFT pour la polyphonie ---
+    static const int fftOrdre = 11; // 2^11 = 2048 échantillons
+    static const int fftTaille = 1 << fftOrdre;
+    juce::dsp::FFT fft { fftOrdre };
+    
+    std::vector<float> bufferEntreeFFT { std::vector<float>(fftTaille, 0.0f) };
+    std::vector<float> bufferSortieFFT { std::vector<float>(fftTaille * 2, 0.0f) };
+    int indexCompteurFFT = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoteDetectorAudioProcessor)
 };
