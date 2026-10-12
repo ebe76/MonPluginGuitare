@@ -1,5 +1,4 @@
 #pragma once
-// CORRECTION : Remplacement de JuceHeader.h par les modules CMake
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <vector>
@@ -35,12 +34,17 @@ public:
     void changeTuning (int tuningId);
     std::vector<int> getCurrentTuningNotes();
 
-    // Variables partagées avec l'interface graphique (Thread-Safe)
+    // Variables partagées avec l'interface graphique
     std::atomic<float> currentFrequency { 0.0f };
     juce::String currentChordName { "Aucun accord" };
 
 private:
-    std::vector<int> notesCordesAide { 40, 45, 50, 55, 59, 64 }; // Accordage Standard EADGBE
+    std::vector<int> notesCordesAide { 40, 45, 50, 55, 59, 64 };
     juce::CriticalSection lock;
+
+    // --- CORRECTION : Déclaration essentielle de la mémoire tampon pour les cordes graves ---
+    static const int bufferHistoriqueTaille = 2048;
+    std::vector<float> bufferHistorique { std::vector<float>(bufferHistoriqueTaille, 0.0f) };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoteDetectorAudioProcessor)
 };
