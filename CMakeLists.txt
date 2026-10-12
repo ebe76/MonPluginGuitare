@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.15)
 project(NoteDetector AUDIO_PLUGIN)
 
-# Active le téléchargement et l'inclusion automatique de JUCE
-add_subdirectory(JUCE)
+# --- CONFIGURATION DU TÉLÉCHARGEMENT AUTOMATIQUE DE JUCE ---
+include(FetchContent)
+FetchContent_Declare(
+    juce
+    GIT_REPOSITORY https://github.com
+    GIT_TAG        7.0.5
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(juce)
+# -----------------------------------------------------------
 
 juce_add_plugin(NoteDetector
     COMPANY_NAME "MonPlugin"
@@ -18,7 +26,6 @@ juce_add_plugin(NoteDetector
     FORMATS VST3
 )
 
-# Liste des fichiers de code source à compiler
 target_sources(NoteDetector PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
