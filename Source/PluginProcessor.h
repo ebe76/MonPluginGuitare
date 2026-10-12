@@ -1,5 +1,7 @@
 #pragma once
-#include <JuceHeader.h>
+// CORRECTION : Remplacement de JuceHeader.h par les modules CMake
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 #include <vector>
 
 class NoteDetectorAudioProcessor  : public juce::AudioProcessor
