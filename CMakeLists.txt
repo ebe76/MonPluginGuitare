@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
 
-# CORRECTION : On indique explicitement à CMake que le projet utilise le langage C++ (CXX)
+# On indique à CMake que le projet utilise le langage C++
 project(NoteDetector VERSION 1.0.0 LANGUAGES CXX)
 
-# Configuration du téléchargement automatique de JUCE
+# --- CONFIGURATION DU TÉLÉCHARGEMENT DIRECT DE JUCE ---
 include(FetchContent)
 FetchContent_Declare(
     juce
-    GIT_REPOSITORY https://github.com
-    GIT_TAG        7.0.5
-    GIT_SHALLOW    TRUE
+    URL      https://github.com
 )
 FetchContent_MakeAvailable(juce)
+# -----------------------------------------------------------
 
-# Maintenant on peut créer le plugin audio en toute sécurité
+# Création du plugin VST3
 juce_add_plugin(NoteDetector
     COMPANY_NAME "MonPlugin"
     PLUGIN_NAME "NoteDetector"
