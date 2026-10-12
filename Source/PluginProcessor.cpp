@@ -32,15 +32,28 @@ void NoteDetectorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     int numSamples = buffer.getNumSamples();
     double sampleRate = getSampleRate();
 
+    // --- CORRECTION DE LA SENSIBILITÉ ---
+    // 1. Création d'un buffer temporaire amplifié pour l'analyse
+    std::vector<float> amplifiedBuffer(numSamples);
+    float boostFactor = 8.0f; // Multiplie virtuellement le volume par 8 pour l'analyse des notes faibles
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        amplifiedBuffer[i] = channelData[i] * boostFactor;
+        // Limiteur de sécurité pour éviter que le calcul informatique ne dépasse les bornes
+        if (amplifiedBuffer[i] > 1.0f)  amplifiedBuffer[i] = 1.0f;
+        if (amplifiedBuffer[i] < -1.0f) amplifiedBuffer[i] = -1.0f;
+    }
+
     int bestLag = -1;
     float bestR = -1.0f;
 
-    // Détection de Pitch par Autocorrélation
-    for (int lag = 20; lag < 1000; ++lag)
+    // 2. Calcul du Pitch sur le signal amplifié
+    for (int lag = 20; lag < 1000; ++generations__lag)
     {
         float r = 0.0f;
         for (int n = 0; n < numSamples - lag; ++n) {
-            r += channelData[n] * channelData[n + lag];
+            r += amplifiedBuffer[n] * amplifiedBuffer[n + lag];
         }
         if (r > bestR) {
             bestR = r;
@@ -49,16 +62,17 @@ void NoteDetectorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     const juce::ScopedLock sl (lock);
-    if (bestLag > 0 && bestR > 0.1f) 
+    
+    // CORRECTION DU SEUIL : On baisse le seuil de validation à 0.02f (au lieu de 0.1f)
+    // Cela permet de détecter les fins de notes (sustain) même quand le volume est très bas
+    if (bestLag > 0 && bestR > 0.02f) 
     {
         float freq = sampleRate / bestLag;
         currentFrequency.store(freq);
 
-        // Conversion en note MIDI
         int midiNote = static_cast<int>(std::round(69.0f + 12.0f * std::log2(freq / 440.0f)));
         int noteIndex = midiNote % 12;
 
-        // Dictionnaire d'accords basique basé sur la note fondamentale jouée
         if (noteIndex == 0) currentChordName = "Do Majeur (C)";
         else if (noteIndex == 9) currentChordName = "La Mineur (Am)";
         else if (noteIndex == 4) currentChordName = "Mi Mineur (Em)";
