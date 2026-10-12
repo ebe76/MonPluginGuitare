@@ -49,7 +49,7 @@ void NoteDetectorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     float bestR = -1.0f;
 
     // 2. Calcul du Pitch sur le signal amplifié
-    for (int lag = 20; lag < 1000; ++generations__lag)
+    for (int lag = 20; lag < 1000; ++lag)
     {
         float r = 0.0f;
         for (int n = 0; n < numSamples - lag; ++n) {
