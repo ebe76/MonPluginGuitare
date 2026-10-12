@@ -11,15 +11,22 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Recuperer le code source
+      - name: Recuperer votre code source
         uses: actions/checkout@v4
+
+      - name: Telecharger le framework JUCE en securite
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: '7.0.5'
+          path: JUCE # Telecharge JUCE directement dans un dossier nomme JUCE
 
       - name: Configurer CMake natif
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.25.x'
 
-      - name: Configurer le projet et Telecharger JUCE
+      - name: Configurer le projet
         run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 
       - name: Compiler le Plugin
