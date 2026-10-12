@@ -14,19 +14,19 @@ jobs:
       - name: Recuperer votre code source
         uses: actions/checkout@v4
 
-      - name: Telecharger le framework JUCE en securite
+      - name: Telecharger le framework JUCE et le SDK VST3
         uses: actions/checkout@v4
         with:
           repository: juce-framework/JUCE
           ref: '7.0.5'
           path: JUCE
+          submodules: true # CORRECTION : Force le téléchargement du SDK VST3 de Steinberg
 
       - name: Configurer CMake natif
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.25.x'
 
-      # CORRECTION : On compile dans "build_propre" pour écraser le bug de l'archive
       - name: Configurer le projet
         run: cmake -B build_propre -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 
