@@ -12,9 +12,14 @@ public:
     void resized() override;
 
 private:
-    void timerCallback() override { repaint(); } // Rafraîchit l'affichage en temps réel
+    void timerCallback() override { repaint(); }
     juce::ComboBox tuningSelector;
     NoteDetectorAudioProcessor& processor;
+
+    // --- VARIABLES DE PERSISTANCE VISUELLE ---
+    float derniereFrequenceValide { 0.0f };
+    int compteurImages { 0 };       // Compte le nombre d'images sans signal
+    int limiteMaintien { 10 };      // 10 images à 20Hz = 500ms de maintien de la note
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoteDetectorAudioProcessorEditor)
 };
