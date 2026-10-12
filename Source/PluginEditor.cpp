@@ -4,7 +4,6 @@
 NoteDetectorAudioProcessorEditor::NoteDetectorAudioProcessorEditor (NoteDetectorAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    // Configuration du menu déroulant d'accordage
     tuningSelector.addItem ("Standard (E A D G B E)", 1);
     tuningSelector.addItem ("Drop D (D A D G B E)",   2);
     tuningSelector.addItem ("Open D (D A D F# A D)", 3);
@@ -16,8 +15,8 @@ NoteDetectorAudioProcessorEditor::NoteDetectorAudioProcessorEditor (NoteDetector
         repaint();
     };
 
-    setSize (800, 300); // Taille initiale de la fenêtre
-    startTimerHz (20);  // 20 rafraîchissements par seconde
+    setSize (800, 300);
+    startTimerHz (20); // 20 rafraîchissements par seconde (1 image = 50ms)
 }
 
 NoteDetectorAudioProcessorEditor::~NoteDetectorAudioProcessorEditor() {}
@@ -29,13 +28,13 @@ void NoteDetectorAudioProcessorEditor::paint (juce::Graphics& g)
     juce::Rectangle<float> manche (10.0f, zoneFenetre.getCentreY() - 60.0f, zoneFenetre.getWidth() - 20.0f, 120.0f);
     
     g.setColour (juce::Colours::brown.darker (0.3f));
-    g.fillRect (manche); // Couleur du bois
+    g.fillRect (manche);
 
     int nbFrettes = 24;
     int nbCordes = 6;
     float espaceCorde = manche.getHeight() / (nbCordes + 1);
 
-    // Dessin de TOUS les repères de touche (Inlays)
+    // Dessin de tous les repères de touche (Inlays)
     g.setColour (juce::Colours::whitesmoke.withAlpha (0.7f));
     for (int caseRepere = 1; caseRepere <= nbFrettes; ++caseRepere)
     {
@@ -59,7 +58,7 @@ void NoteDetectorAudioProcessorEditor::paint (juce::Graphics& g)
         }
     }
 
-    // Dessin des Frettes logarithmiques
+    // Dessin des Frettes
     g.setColour (juce::Colours::lightgrey);
     for (int frette = 0; frette <= nbFrettes; ++frette) {
         float positionRelative = 1.0f - std::pow (1.0f / 1.059463f, frette);
@@ -67,18 +66,38 @@ void NoteDetectorAudioProcessorEditor::paint (juce::Graphics& g)
         if (xFrette <= manche.getRight()) g.drawVerticalLine (static_cast<int>(xFrette), manche.getY(), manche.getBottom());
     }
 
-    // Dessin des Cordes (avec épaisseurs variables)
+    // Dessin des Cordes
     g.setColour (juce::Colours::silver);
     for (int corde = 0; corde < nbCordes; ++corde) {
         float yCorde = manche.getY() + (corde + 1) * espaceCorde;
         g.drawLine (manche.getX(), yCorde, manche.getRight(), yCorde, 0.5f + (corde * 0.4f));
     }
 
-    // Récupération de la note et affichage de la pastille rouge
-    float freq = processor.currentFrequency.load();
-    if (freq > 60.0f && freq < 2000.0f) 
+    // --- 4. LOGIQUE DE PERSISTANCE DE LA NOTE ---
+    float freqActuelle = processor.currentFrequency.load();
+
+    if (freqActuelle > 60.0f && freqActuelle < 2000.0f) 
     {
-        int midiNote = static_cast<int>(std::round(69.0f + 12.0f * std::log2(freq / 440.0f)));
+        // Signal valide détecté : on met à jour la mémoire et on réinitialise le compteur
+        derniereFrequenceValide = freqActuelle;
+        compteurImages = 0;
+    }
+    else
+    {
+        // Plus de signal : on commence à compter le temps qui passe
+        compteurImages++;
+        
+        // Si le silence dure depuis plus de 500ms (10 images), on efface l'affichage
+        if (compteurImages > limiteMaintien)
+        {
+            derniereFrequenceValide = 0.0f;
+        }
+    }
+
+    // Dessin de la pastille rouge basée sur la note mémorisée
+    if (derniereFrequenceValide > 60.0f && derniereFrequenceValide < 2000.0f) 
+    {
+        int midiNote = static_cast<int>(std::round(69.0f + 12.0f * std::log2(derniereFrequenceValide / 440.0f)));
         std::vector<int> notesCordesAide = processor.getCurrentTuningNotes();
         
         for (int corde = 0; corde < nbCordes; ++corde) {
@@ -107,6 +126,5 @@ void NoteDetectorAudioProcessorEditor::paint (juce::Graphics& g)
 
 void NoteDetectorAudioProcessorEditor::resized()
 {
-    // Positionnement du sélecteur d'accordage en haut à droite
     tuningSelector.setBounds (getWidth() - 210, 15, 190, 30);
 }
